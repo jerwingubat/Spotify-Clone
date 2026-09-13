@@ -1,10 +1,37 @@
-import React, { useState } from 'react'
+import React, { useEffect, useState } from 'react'
 import { useAuth } from '../store/AuthContext.jsx'
 import { ArrowIcon } from './Icons.jsx'
 
 export default function TopBar({ onBack, canGoBack, onHome }) {
   const { user, signIn, signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
+  const [installEvt, setInstallEvt] = useState(null)
+
+  useEffect(() => {
+    const onPrompt = (e) => {
+      e.preventDefault()
+      setInstallEvt(e)
+    }
+    const onInstalled = () => setInstallEvt(null)
+    window.addEventListener('beforeinstallprompt', onPrompt)
+    window.addEventListener('appinstalled', onInstalled)
+    return () => {
+      window.removeEventListener('beforeinstallprompt', onPrompt)
+      window.removeEventListener('appinstalled', onInstalled)
+    }
+  }, [])
+
+  const promptInstall = async () => {
+    if (!installEvt) return
+    installEvt.prompt()
+    try {
+      const { outcome } = await installEvt.userChoice
+      if (outcome === 'accepted') setInstallEvt(null)
+    } catch {
+      /* dismissed */
+    }
+    setMenuOpen(false)
+  }
 
   return (
     <header className="topbar">
@@ -21,6 +48,12 @@ export default function TopBar({ onBack, canGoBack, onHome }) {
         {!user && (
           <button className="btn-primary" onClick={signIn}>
             Sign in with Google
+          </button>
+        )}
+
+        {installEvt && !user && (
+          <button className="btn-primary" onClick={promptInstall}>
+            Install app
           </button>
         )}
 
@@ -44,6 +77,14 @@ export default function TopBar({ onBack, canGoBack, onHome }) {
 
             {menuOpen && (
               <div className="user-menu__dropdown">
+                {installEvt && (
+                  <button onClick={promptInstall}>
+                    <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor" style={{ verticalAlign: '-3px', marginRight: 8 }}>
+                      <path d="M19 9h-4V3H9v6H5l7 7 7-7zM5 18v2h14v-2H5z" />
+                    </svg>
+                    Install app
+                  </button>
+                )}
                 <button
                   onClick={() => {
                     setMenuOpen(false)

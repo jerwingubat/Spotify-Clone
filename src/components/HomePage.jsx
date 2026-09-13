@@ -75,7 +75,7 @@ export default function HomePage({ onOpenPlaylist }) {
       </div>
 
       <div className="section">
-        <SectionHeader title="Spotify Playlists" link />
+        <SectionHeader title="Spotibai Playlists" link />
         <div className="grid">
           {playlists.slice(5, 11).map((p) => (
             <PlaylistCard key={p.id} playlist={p} onOpen={onOpenPlaylist} onPlay={(t) => play(t)} />
@@ -92,11 +92,11 @@ export default function HomePage({ onOpenPlaylist }) {
                 <svg width="26" height="26" viewBox="0 0 24 24" fill="#111">
                   <path d="M2 12l20-10-12 18v-8z" />
                 </svg>
-                Spotify
+                Spotibai
               </span>
             </div>
             <div>
-              <p className="chart-card__label">Spotify Charts</p>
+              <p className="chart-card__label">Spotibai Charts</p>
               <h3>The Global Top 50</h3>
               <p className="chart-card__sub">The top tracks from around the world this week</p>
             </div>

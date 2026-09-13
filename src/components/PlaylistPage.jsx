@@ -58,7 +58,7 @@ export default function PlaylistPage({ playlist, onBack }) {
               <h1 className="playlist__name">{playlist.name}</h1>
               <p className="playlist__desc">{playlist.desc}</p>
               <p className="playlist__meta">
-                <strong>{user?.displayName || 'Spotify'}</strong> • {tracklist.length} songs
+                <strong>{user?.displayName || 'Spotibai'}</strong> • {tracklist.length} songs
               </p>
             </div>
           </div>

@@ -178,7 +178,7 @@ export default function SearchPage() {
           <div className="section-header">
             <h3>{results.length} results</h3>
           </div>
-          <div className="table table--tracks">
+          <div className="table table--tracks table--search">
             <div className="table__head">
               <span className="col-rank">#</span>
               <span className="col-main">Title</span>
@@ -196,6 +196,7 @@ export default function SearchPage() {
                   <span className="minicover" style={{ background: r.thumbnail ? `url(${r.thumbnail}) center/cover` : `hsl(${(i * 47 + 200) % 360}, 45%, 35%)` }} />
                   <div className="col-main-body">
                     <strong>{r.title}</strong>
+                    <span className="col-main-sub">{r.artist || '–'}</span>
                   </div>
                 </span>
                 <span className="col-artist">{r.artist || '–'}</span>
