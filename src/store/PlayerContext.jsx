@@ -116,6 +116,21 @@ export function PlayerProvider({ children }) {
     if (a) a.volume = volume
   }, [volume])
 
+  const skipOrStop = useCallback(
+    (msg) => {
+      const { queue: q, index: i } = stateRef.current
+      const ni = i + 1
+      if (q.length > 1 && ni < q.length) {
+        setIndex(ni)
+        loadSong(q[ni])
+      } else {
+        setError(msg || 'Playback error — this track may be unavailable')
+        setPlaying(false)
+      }
+    },
+    [loadSong],
+  )
+
   const loadSong = useCallback(
     async (song) => {
       setLoading(true)
@@ -130,12 +145,12 @@ export function PlayerProvider({ children }) {
         setTrack({ title: song.title, artist: song.artist, album: song.album, source: song.source, img: song.thumbnail || song.img })
         await playSource(a, url, hls)
       } catch (err) {
-        setError(err.message || 'Could not load audio')
+        skipOrStop(err.message || 'Could not load audio')
       } finally {
         setLoading(false)
       }
     },
-    [getAudio, playSource, destroyHls],
+    [getAudio, playSource, destroyHls, skipOrStop],
   )
 
   const play = useCallback(
@@ -267,7 +282,7 @@ export function PlayerProvider({ children }) {
         a.removeAttribute('src')
       }
     }
-    const onError = () => setError('Playback error — this track may be unavailable')
+    const onError = () => skipOrStop('Playback error — this track may be unavailable')
 
     a.addEventListener('timeupdate', onTime)
     a.addEventListener('durationchange', onDur)
@@ -284,7 +299,7 @@ export function PlayerProvider({ children }) {
       a.removeEventListener('ended', onEnded)
       a.removeEventListener('error', onError)
     }
-  }, [getAudio, loadSong, destroyHls])
+  }, [getAudio, loadSong, destroyHls, skipOrStop])
 
   return (
     <PlayerContext.Provider
