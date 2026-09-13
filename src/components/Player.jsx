@@ -6,10 +6,12 @@ import {
   SkipForwardIcon,
   RepeatIcon,
   VolumeIcon,
+  PlusIcon,
 } from './Icons.jsx'
 import { usePlayer } from '../store/PlayerContext.jsx'
 import { useAuth } from '../store/AuthContext.jsx'
 import { usePlaylists } from '../store/PlaylistsContext.jsx'
+import { AddToPlaylistModal } from './PlaylistModals.jsx'
 
 function format(sec) {
   if (!Number.isFinite(sec)) return '0:00'
@@ -28,6 +30,7 @@ export default function Player() {
 
   const [shuffle, setShuffle] = useState(false)
   const [repeat, setRepeat] = useState(false)
+  const [addOpen, setAddOpen] = useState(false)
 
   const liked = user ? isLiked(track) : false
   const pct = duration ? (progress / duration) * 100 : 0
@@ -81,6 +84,13 @@ export default function Player() {
           <svg width="16" height="16" viewBox="0 0 24 24" fill={liked ? '#1ed760' : 'none'} stroke={liked ? 'none' : '#b3b3b3'} strokeWidth="1.5">
             <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
           </svg>
+        </button>
+        <button
+          className="flex shrink-0 items-center justify-center text-[#b3b3b3] transition hover:text-white"
+          onClick={() => setAddOpen(true)}
+          title="Add to playlist"
+        >
+          <PlusIcon />
         </button>
       </div>
 
@@ -138,14 +148,7 @@ export default function Player() {
 
       {/* Right: volume (desktop) */}
       <div className="hidden items-center justify-end gap-4 lg:flex">
-        <button className={btnCls(false)}>
-          <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
-            <path d="M11.196 8 6 5v6l5.196-3z" />
-          </svg>
-        </button>
-        <button className={btnCls(false)}>
-          <VolumeIcon />
-        </button>
+        <VolumeIcon />
         <label className="bar w-[110px] flex-none">
           <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVol(+e.target.value)} />
           <span className="bar__fill" style={{ width: `${volume * 100}%` }} />
@@ -176,6 +179,8 @@ export default function Player() {
           <SkipForwardIcon />
         </button>
       </div>
+
+      {addOpen && <AddToPlaylistModal song={track} onClose={() => setAddOpen(false)} />}
     </footer>
   )
 }

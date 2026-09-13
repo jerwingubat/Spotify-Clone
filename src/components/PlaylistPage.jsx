@@ -1,16 +1,19 @@
-import React from 'react'
+import React, { useState } from 'react'
 import { songs as defaultSongs } from '../data.js'
-import { PlayFilledIcon, HeartIcon, MoreIcon, ClockIcon } from './Icons.jsx'
+import { PlayFilledIcon, HeartIcon, MoreIcon, ClockIcon, CrossIcon } from './Icons.jsx'
 import { usePlayer } from '../store/PlayerContext.jsx'
 import { useAuth } from '../store/AuthContext.jsx'
 import { usePlaylists } from '../store/PlaylistsContext.jsx'
+import { EditPlaylistModal, AddSongsModal } from './PlaylistModals.jsx'
 
 const LIKE_COLORS = ['#503750', '#e8115b', '#148a08', '#246bc4', '#8e66ac', '#ba5d07']
 
 export default function PlaylistPage({ playlist, onBack }) {
   const { playQueue } = usePlayer()
   const { user } = useAuth()
-  const { remove, create } = usePlaylists()
+  const { remove, create, removeSong } = usePlaylists()
+  const [editing, setEditing] = useState(false)
+  const [adding, setAdding] = useState(false)
 
   const isOwned = !!user && !!playlist.id && !!playlist.createdAt
   const tracklist =
@@ -87,52 +90,87 @@ export default function PlaylistPage({ playlist, onBack }) {
         )}
 
         {user && isOwned && playlist.name !== 'Liked Songs' && (
-          <button
-            className="text-[13px] font-bold text-[#b3b3b3] transition hover:scale-[1.04] hover:text-[#ff4d4d]"
-            onClick={() => {
-              if (confirm(`Delete "${playlist.name}"?`)) {
-                remove(playlist.id)
-                onBack()
-              }
-            }}
-          >
-            Delete playlist
-          </button>
+          <>
+            <button
+              className="text-[13px] font-bold text-[#b3b3b3] transition hover:scale-[1.04] hover:text-white"
+              onClick={() => setEditing(true)}
+            >
+              Edit details
+            </button>
+            <button
+              className="text-[13px] font-bold text-[#b3b3b3] transition hover:scale-[1.04] hover:text-white"
+              onClick={() => setAdding(true)}
+            >
+              Add songs
+            </button>
+            <button
+              className="text-[13px] font-bold text-[#b3b3b3] transition hover:scale-[1.04] hover:text-[#ff4d4d]"
+              onClick={() => {
+                if (confirm(`Delete "${playlist.name}"?`)) {
+                  remove(playlist.id)
+                  onBack()
+                }
+              }}
+            >
+              Delete playlist
+            </button>
+          </>
         )}
       </div>
 
       <div className="mt-4">
-        <div className="grid grid-cols-[32px_1fr_84px] items-center gap-2 px-3 pb-2.5 text-[13px] font-semibold text-[#b3b3b3] md:grid-cols-[32px_1fr_3fr_60px] md:gap-3">
-          <span className="text-left md:text-right">#</span>
+        <div className="grid grid-cols-[24px_1fr_28px] items-center gap-2 px-3 pb-2.5 text-[13px] font-semibold text-[#b3b3b3] sm:grid-cols-[24px_1fr_3fr_60px] sm:gap-3">
+          <span className="text-left sm:text-right">#</span>
           <span>Title</span>
-          <span className="hidden md:block">Album</span>
-          <span className="hidden justify-self-end md:block">
+          <span className="hidden sm:block">Album</span>
+          <span className="hidden justify-self-end sm:block">
             <ClockIcon />
           </span>
         </div>
 
         {tracklist.length === 0 && (
           <p className="px-3 py-6 text-center text-[14px] text-[#b3b3b3]">
-            No songs yet — hit the play button or heart a track.
+            No songs yet — add some with “Add songs”.
           </p>
         )}
 
         {tracklist.map((t, i) => (
           <div
             key={`${t.title}-${i}`}
-            className="group grid cursor-pointer grid-cols-[32px_1fr_84px] items-center gap-2 rounded px-3 py-2 transition hover:bg-white/10 md:grid-cols-[32px_1fr_3fr_60px] md:gap-3"
+            className="group grid cursor-pointer grid-cols-[24px_1fr_28px] items-center gap-2 rounded px-3 py-2 transition hover:bg-white/10 sm:grid-cols-[24px_1fr_3fr_60px] sm:gap-3"
             onClick={() => playQueue(tracklist, i)}
           >
             <span className="text-right text-sm text-[#b3b3b3]">{i + 1}</span>
             <span className="flex min-w-0 items-center gap-3">
               <span className="h-10 w-10 shrink-0 rounded" style={{ background: `hsl(${(i * 47 + 200) % 360}, 45%, 35%)` }} />
-              <strong className="truncate">{t.title}</strong>
+              <div className="min-w-0">
+                <strong className="truncate">{t.title}</strong>
+                <span className="block truncate text-[12px] text-[#b3b3b3] sm:hidden">{t.album || t.artist || 'Album'}</span>
+              </div>
             </span>
-            <span className="truncate text-[#b3b3b3]">{t.album || t.artist || 'Album'}</span>
-            <span className="hidden justify-self-end text-sm text-[#b3b3b3] md:block">–</span>
+            <span className="hidden truncate text-[#b3b3b3] sm:block">{t.album || t.artist || 'Album'}</span>
+            <span className="flex justify-end sm:block">
+              {isOwned ? (
+                <button
+                  className="flex h-6 w-6 items-center justify-center rounded-full text-[#b3b3b3] transition hover:bg-white/15 hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
+                  onClick={(e) => {
+                    e.stopPropagation()
+                    if (confirm(`Remove "${t.title}"?`)) removeSong(playlist.id, t.title)
+                  }}
+                  title="Remove from playlist"
+                >
+                  <CrossIcon size={12} />
+                </button>
+              ) : (
+                <span className="hidden text-sm text-[#b3b3b3] sm:block">–</span>
+              )}
+            </span>
           </div>
         ))}
       </div>
+
+      {editing && <EditPlaylistModal playlist={playlist} onClose={() => setEditing(false)} />}
+      {adding && <AddSongsModal playlistId={playlist.id} onClose={() => setAdding(false)} />}
     </div>
   )
 }

@@ -1,5 +1,5 @@
-const CACHE = 'spotibai-v1'
-const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/icon-192.png', '/icon-512.png']
+const CACHE = 'spotibai-v2'
+const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/spotibai.png', '/icon-192.png', '/icon-512.png', '/icon-512-maskable.png', '/apple-touch-icon.png']
 
 self.addEventListener('install', (event) => {
   event.waitUntil(

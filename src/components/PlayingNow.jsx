@@ -1,8 +1,9 @@
 import React from 'react'
-import { ShuffleIcon, SkipBackIcon, PlayFilledIcon, SkipForwardIcon, RepeatIcon } from './Icons.jsx'
+import { ShuffleIcon, SkipBackIcon, PlayFilledIcon, SkipForwardIcon, RepeatIcon, PlusIcon } from './Icons.jsx'
 import { usePlayer } from '../store/PlayerContext.jsx'
 import { useAuth } from '../store/AuthContext.jsx'
 import { usePlaylists } from '../store/PlaylistsContext.jsx'
+import { AddToPlaylistModal } from './PlaylistModals.jsx'
 
 function format(sec) {
   if (!Number.isFinite(sec)) return '0:00'
@@ -21,6 +22,7 @@ export default function PlayingNow() {
 
   const [shuffle, setShuffle] = React.useState(false)
   const [repeat, setRepeat] = React.useState(false)
+  const [addOpen, setAddOpen] = React.useState(false)
 
   if (!track) return null
 
@@ -136,9 +138,18 @@ export default function PlayingNow() {
                 <path d="M20.84 4.61a5.5 5.5 0 0 0-7.78 0L12 5.67l-1.06-1.06a5.5 5.5 0 0 0-7.78 7.78l1.06 1.06L12 21.23l7.78-7.78 1.06-1.06a5.5 5.5 0 0 0 0-7.78z" />
               </svg>
             </button>
+            <button
+              className="flex h-8 w-8 items-center justify-center rounded-full text-[#b3b3b3] transition hover:text-white"
+              onClick={() => setAddOpen(true)}
+              title="Add to playlist"
+            >
+              <PlusIcon />
+            </button>
           </div>
         </div>
       </div>
+
+      {addOpen && <AddToPlaylistModal song={track} onClose={() => setAddOpen(false)} />}
     </section>
   )
 }
