@@ -124,13 +124,32 @@ function tryPath(abs) {
 
 async function ensureBuild() {
   if (existsSync(join(DIST, 'index.html'))) return
-  console.log('[bonto] dist missing, running `vite build`…')
-  const r = spawnSync(process.execPath, [join(ROOT, 'node_modules', 'npm', 'bin', 'npm-cli.js'), 'run', 'build'], {
-    cwd: ROOT,
-    encoding: 'utf8',
-    timeout: 600_000,
-  })
-  if (r.status !== 0) throw new Error(`vite build failed: ${String(r.stderr || r.stdout || '').slice(0, 1000)}`)
+
+  const viteJs = join(ROOT, 'node_modules', 'vite', 'bin', 'vite.js')
+  if (existsSync(viteJs)) {
+    console.log('[bonto] dist missing, running `vite build`…')
+    const r = spawnSync(process.execPath, [viteJs, 'build'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      timeout: 600_000,
+    })
+    if (r.status !== 0) throw new Error(`vite build failed: ${String(r.stderr || r.stdout || '').slice(0, 1000)}`)
+    return
+  }
+
+  const npmCli = join(ROOT, 'node_modules', 'npm', 'bin', 'npm-cli.js')
+  if (existsSync(npmCli)) {
+    console.log('[bonto] dist missing, running `npm run build`…')
+    const r = spawnSync(process.execPath, [npmCli, 'run', 'build'], {
+      cwd: ROOT,
+      encoding: 'utf8',
+      timeout: 600_000,
+    })
+    if (r.status !== 0) throw new Error(`vite build failed: ${String(r.stderr || r.stdout || '').slice(0, 1000)}`)
+    return
+  }
+
+  throw new Error('no vite install found (node_modules missing?)')
 }
 
 async function start() {
