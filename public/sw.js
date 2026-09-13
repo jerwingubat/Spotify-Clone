@@ -1,4 +1,4 @@
-const CACHE = 'spotibai-v2'
+const CACHE = 'spotibai-v3'
 const SHELL = ['/', '/index.html', '/manifest.webmanifest', '/spotibai.png', '/icon-192.png', '/icon-512.png', '/icon-512-maskable.png', '/apple-touch-icon.png']
 
 self.addEventListener('install', (event) => {

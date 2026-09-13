@@ -181,8 +181,9 @@ export default function SearchPage() {
             Search failed: {searchError}
             <br />
             <span className="text-[13px] text-[#7a7a7a]">
-              Run <code className="rounded bg-[#222] px-1.5 py-0.5 text-[13px]">npm run dev:full</code> (or deploy the Cloud
-              Function) so <code className="rounded bg-[#222] px-1.5 py-0.5 text-[13px]">/api/search</code> is available.
+              This link is being served without its backend. Serve it via <code className="rounded bg-[#222] px-1.5 py-0.5 text-[13px]">node server/index.mjs</code>{' '}
+              or <code className="rounded bg-[#222] px-1.5 py-0.5 text-[13px]">firebase deploy</code>, or locally run{' '}
+              <code className="rounded bg-[#222] px-1.5 py-0.5 text-[13px]">npm run dev:full</code>.
             </span>
           </p>
         </div>

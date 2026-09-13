@@ -51,8 +51,8 @@ export default function PlayingNow() {
           className="relative h-40 w-40 shrink-0 overflow-hidden rounded-lg shadow-[0_16px_48px_rgba(0,0,0,0.6)] md:h-52 md:w-52"
           style={{ background: 'linear-gradient(135deg,#503750,#1f1f1f)' }}
         >
-          {track.thumbnail ? (
-            <img src={track.thumbnail} alt="" className="h-full w-full object-cover" />
+          {track.thumbnail || track.img ? (
+            <img src={track.thumbnail || track.img} alt="" className="h-full w-full object-cover" />
           ) : (
             <div className="flex h-full w-full items-center justify-center text-7xl font-black text-black/40">
               {String(track.title || 'S')[0]}

@@ -200,7 +200,13 @@ export function createApi({ searchPlaylist, extractAudioUrl }) {
       }
 
       if (hls) {
-        const up = await fetch(target, { redirect: 'follow' })
+        const up = await fetch(target, {
+          redirect: 'follow',
+          headers: {
+            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+            Accept: '*/*',
+          },
+        })
         if (!up.ok) {
           return json(res, 502, { error: 'playlist fetch failed', detail: `${up.status} ${target}` })
         }

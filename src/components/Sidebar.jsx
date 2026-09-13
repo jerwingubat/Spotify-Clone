@@ -124,8 +124,9 @@ export default function Sidebar({ view, setView, library, isUserLibrary, setSele
                 setView('playlist')
               }}
             >
-              <span className="flex h-12 w-12 shrink-0 items-center justify-center rounded" style={{ background: p.color }}>
-                <svg width="16" height="16" viewBox="0 0 24 24" fill="#000">
+              <span className="relative flex h-12 w-12 shrink-0 items-center justify-center overflow-hidden rounded" style={{ background: p.color }}>
+                {p.img && <img src={p.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
+                <svg width="16" height="16" viewBox="0 0 24 24" fill="#fff" className="relative drop-shadow">
                   <path d="M7.05 3.606l13.49 7.788a.7.7 0 0 1 0 1.212L7.05 20.394A.7.7 0 0 1 6 19.788V4.212a.7.7 0 0 1 1.05-.606z" />
                 </svg>
               </span>

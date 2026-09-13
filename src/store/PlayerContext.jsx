@@ -76,7 +76,17 @@ export function PlayerProvider({ children }) {
             a.play().then(resolve).catch(reject)
           })
           hlsPlayer.on(Hls.Events.ERROR, (_e, data) => {
-            if (data.fatal) reject(new Error('Stream error (HLS)'))
+            if (data.fatal) {
+              let msg = 'Stream error (HLS)'
+              if (data.type === Hls.ErrorTypes.NETWORK_ERROR) {
+                const http = data.networkDetails && data.networkDetails.status
+                const detail = String(data.details || '').replace(/_/g, ' ')
+                msg = `Stream error (HLS) — ${detail.toLowerCase()}${http ? ` (HTTP ${http})` : ''}`
+              }
+              hlsPlayer.destroy()
+              hlsRef.current = null
+              reject(new Error(msg))
+            }
           })
           return
         }
@@ -96,15 +106,13 @@ export function PlayerProvider({ children }) {
       setLoading(true)
       setError(null)
       const a = audioRef.current || getAudio()
+      destroyHls()
       try {
-        const { url, hls: knownHls } = await resolvePlayUrl(song)
+        const { url } = await resolvePlayUrl(song)
         if (!url) throw new Error(`No audio found for "${song.title}"`)
-        let hls = knownHls
-        if (!hls) {
-          const type = await probeStream(url)
-          if (type === 'hls') hls = true
-        }
-        setTrack({ title: song.title, artist: song.artist, album: song.album, source: song.source })
+        const type = await probeStream(url)
+        const hls = type === 'hls'
+        setTrack({ title: song.title, artist: song.artist, album: song.album, source: song.source, img: song.thumbnail || song.img })
         await playSource(a, url, hls)
       } catch (err) {
         setError(err.message || 'Could not load audio')
@@ -112,7 +120,7 @@ export function PlayerProvider({ children }) {
         setLoading(false)
       }
     },
-    [getAudio, playSource],
+    [getAudio, playSource, destroyHls],
   )
 
   const play = useCallback(

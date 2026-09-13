@@ -66,10 +66,10 @@ export default function Player() {
 
       {/* Left: track info */}
       <div className="flex min-w-0 items-center gap-3">
-        <div
-          className="h-12 w-12 shrink-0 rounded shadow-[0_4px_16px_rgba(0,0,0,0.4)] md:h-14 md:w-14"
-          style={{ background: 'linear-gradient(135deg,#dc148c,#503750)', backgroundSize: 'cover' }}
-        />
+        <div className="relative h-12 w-12 shrink-0 overflow-hidden rounded shadow-[0_4px_16px_rgba(0,0,0,0.4)] md:h-14 md:w-14">
+          <div className="absolute inset-0" style={{ background: 'linear-gradient(135deg,#dc148c,#503750)', backgroundSize: 'cover' }} />
+          {track.img && <img src={track.img} alt="" className="absolute inset-0 h-full w-full object-cover" />}
+        </div>
         <div className="min-w-0">
           <p className="truncate text-[14px] font-semibold leading-tight">{track.title}</p>
           <p className="truncate text-[12px] text-[#b3b3b3]">

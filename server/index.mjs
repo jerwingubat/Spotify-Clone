@@ -88,12 +88,16 @@ function makeBackend(ytDlpBin) {
     },
 
     async extractAudioUrl(url) {
-      const { stdout } = await execFileAsync(
-        ytDlpBin,
-        ['--get-url', '-f', 'bestaudio/best', '--no-playlist', '--no-warnings', '--extractor-args', 'youtube:player_client=android', url],
-        { maxBuffer: 1024 * 1024 * 32, timeout: 120_000 },
-      )
-      return stdout.trim().split('\n')[0] || ''
+      const args = ['--get-url', '-f', 'bestaudio/best', '--no-playlist', '--no-warnings', '--extractor-args', 'youtube:player_client=android', url]
+      const run = () =>
+        execFileAsync(ytDlpBin, args, { maxBuffer: 1024 * 1024 * 32, timeout: 120_000 })
+      let out
+      try {
+        out = await run()
+      } catch (err) {
+        out = await run()
+      }
+      return String(out.stdout || '').trim().split('\n')[0] || ''
     },
   }
 }

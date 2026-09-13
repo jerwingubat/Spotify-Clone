@@ -25,7 +25,12 @@ function PlaylistCard({ playlist, onOpen, onPlay }) {
       className="group cursor-pointer rounded-md bg-panel-elevated p-3 transition hover:bg-panel-hover"
       onClick={() => onOpen(playlist)}
     >
-      <div className="relative mb-3 aspect-square overflow-hidden rounded shadow-lg" style={{ background: playlist.color }}>
+      <div className="relative mb-3 aspect-square overflow-hidden rounded shadow-lg">
+        <div className="absolute inset-0" style={{ background: playlist.color }} />
+        {playlist.img && (
+          <img src={playlist.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+        )}
+        <div className="absolute inset-0 bg-gradient-to-t from-black/30 via-transparent to-transparent" />
         <span
           className="absolute bottom-3 right-3 flex h-12 w-12 translate-y-5 items-center justify-center rounded-full bg-spotify opacity-100 shadow-[0_8px_16px_rgba(0,0,0,0.3)] transition-all duration-300 group-hover:translate-y-0 md:opacity-0 md:group-hover:opacity-100"
           onClick={(e) => {
@@ -58,7 +63,10 @@ export default function HomePage({ onOpenPlaylist }) {
         <div className="grid grid-cols-1 gap-2 md:grid-cols-2 2xl:grid-cols-3">
           {playlists.slice(0, 6).map((p) => (
             <button key={p.id} className="group flex min-h-[56px] w-full items-center overflow-hidden rounded bg-white/10 text-left transition hover:bg-white/20" onClick={() => onOpenPlaylist(p)}>
-              <span className="relative h-[56px] w-[56px] shrink-0" style={{ background: p.color }}>
+              <span className="relative h-[56px] w-[56px] shrink-0 overflow-hidden" style={{ background: p.color }}>
+                {p.img && (
+                  <img src={p.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+                )}
                 <span
                   className="absolute inset-0 flex items-center justify-center bg-black/40 opacity-100 transition md:opacity-0 md:group-hover:opacity-100"
                   onClick={(e) => {
@@ -133,9 +141,11 @@ export default function HomePage({ onOpenPlaylist }) {
               <span className="text-sm text-[#b3b3b3]">{c.rank}</span>
               <span className="flex min-w-0 items-center gap-3">
                 <span
-                  className="h-10 w-10 shrink-0 rounded"
-                  style={{ background: c.rank === 1 ? 'linear-gradient(135deg,#e8115b,#148a08)' : '#222' }}
-                />
+                  className="relative block h-10 w-10 shrink-0 overflow-hidden rounded"
+                >
+                  <span className="absolute inset-0" style={{ background: c.rank === 1 ? 'linear-gradient(135deg,#e8115b,#148a08)' : '#222' }} />
+                  <img src={songs[i]?.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />
+                </span>
                 <strong className="truncate">{c.title}</strong>
               </span>
               <span className="hidden truncate text-[#b3b3b3] md:block">{c.artist}</span>

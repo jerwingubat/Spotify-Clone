@@ -15,6 +15,9 @@ export default {
       fontFamily: {
         sans: [
           'Circular',
+          'Spotify Mix',
+          'CircularSpotify',
+          'Plus Jakarta Sans',
           'Helvetica Neue',
           'Helvetica',
           'Arial',

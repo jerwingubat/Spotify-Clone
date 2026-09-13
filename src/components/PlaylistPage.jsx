@@ -16,18 +16,14 @@ export default function PlaylistPage({ playlist, onBack }) {
   const [adding, setAdding] = useState(false)
 
   const isOwned = !!user && !!playlist.id && !!playlist.createdAt
-  const tracklist =
-    playlist.songs && playlist.songs.length
-      ? playlist.songs
-      : defaultSongs
+  const tracklist = Array.isArray(playlist.songs) ? playlist.songs : defaultSongs
 
   const saveToLibrary = async () => {
     if (!user) return
     const color = LIKE_COLORS[playlist.id % LIKE_COLORS.length]
-    const songs =
-      playlist.songs && playlist.songs.length
-        ? playlist.songs
-        : defaultSongs.map((s) => ({ title: s.title, artist: s.artist, album: s.album }))
+    const songs = Array.isArray(playlist.songs)
+      ? playlist.songs.map((s) => ({ title: s.title, artist: s.artist, album: s.album }))
+      : defaultSongs.map((s) => ({ title: s.title, artist: s.artist, album: s.album }))
     await create({
       name: playlist.name,
       color,
@@ -51,10 +47,13 @@ export default function PlaylistPage({ playlist, onBack }) {
 
         <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
           <div
-            className="flex h-40 w-40 shrink-0 items-center justify-center rounded shadow-[0_16px_32px_rgba(0,0,0,0.5)] sm:h-48 sm:w-48"
+            className="relative flex h-40 w-40 shrink-0 items-center justify-center overflow-hidden rounded shadow-[0_16px_32px_rgba(0,0,0,0.5)] sm:h-48 sm:w-48"
             style={{ background: playlist.color }}
           >
-            <svg width="40" height="40" viewBox="0 0 24 24" fill="#000">
+            {playlist.img && (
+              <img src={playlist.img} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            )}
+            <svg width="40" height="40" viewBox="0 0 24 24" fill="#000" className="drop-shadow-lg">
               <path d="M7.05 3.606l13.49 7.788a.7.7 0 0 1 0 1.212L7.05 20.394A.7.7 0 0 1 6 19.788V4.212a.7.7 0 0 1 1.05-.606z" />
             </svg>
           </div>
@@ -142,7 +141,9 @@ export default function PlaylistPage({ playlist, onBack }) {
           >
             <span className="text-right text-sm text-[#b3b3b3]">{i + 1}</span>
             <span className="flex min-w-0 items-center gap-3">
-              <span className="h-10 w-10 shrink-0 rounded" style={{ background: `hsl(${(i * 47 + 200) % 360}, 45%, 35%)` }} />
+              <span className="relative block h-10 w-10 shrink-0 overflow-hidden rounded" style={{ background: `hsl(${(i * 47 + 200) % 360}, 45%, 35%)` }}>
+                {t.img && <img src={t.img} alt="" loading="lazy" className="absolute inset-0 h-full w-full object-cover" />}
+              </span>
               <div className="min-w-0">
                 <strong className="truncate">{t.title}</strong>
                 <span className="block truncate text-[12px] text-[#b3b3b3] sm:hidden">{t.album || t.artist || 'Album'}</span>
