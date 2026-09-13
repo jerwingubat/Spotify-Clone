@@ -35,7 +35,8 @@ const MIME = {
 /* ---------- yt-dlp bootstrap (no system install required) ---------- */
 
 const isWin = process.platform === 'win32'
-const BIN_NAME = isWin ? 'yt-dlp.exe' : 'yt-dlp'
+const isMac = process.platform === 'darwin'
+const BIN_NAME = isWin ? 'yt-dlp.exe' : isMac ? 'yt-dlp_macos' : 'yt-dlp_linux'
 const CACHE_DIR = join(ROOT, 'node_modules', '.cache', 'ytdlp')
 
 function checkVersion(bin) {
@@ -43,7 +44,7 @@ function checkVersion(bin) {
     const r = spawnSync(bin, ['--version'], { encoding: 'utf8', timeout: 15000, shell: false })
     const v = String(r.stdout || '').trim()
     if (r.status !== 0 || !/^\d{4}\.\d{2}(\d{2})?/.test(v)) {
-      console.log(`[bonto] yt-dlp probe rejected ${bin}: status=${r.status} out=${JSON.stringify(v.slice(0, 40))}`)
+      console.log(`[bonto] yt-dlp probe rejected ${bin}: status=${r.status} out=${JSON.stringify(v.slice(0, 40))} err=${JSON.stringify(String(r.stderr || '').slice(0, 120))}`)
       return false
     }
     return true

@@ -14,15 +14,20 @@ const execFileAsyncLine = (cmd, args) =>
   execFileAsync(cmd, args).then((out) => out.trim().split('\n')[0] || '')
 
 const isWin = process.platform === 'win32'
-const BIN_NAME = isWin ? 'yt-dlp.exe' : 'yt-dlp'
+const isMac = process.platform === 'darwin'
+const BIN_NAME = isWin ? 'yt-dlp.exe' : isMac ? 'yt-dlp_macos' : 'yt-dlp_linux'
 
 function checkVersion(bin) {
   try {
     const r = spawnSync(bin, ['--version'], { encoding: 'utf8', timeout: 15000, shell: false })
     const v = String(r.stdout || '').trim()
-    if (r.status !== 0 || !/^\d{4}\.\d{2}(\d{2})?/.test(v)) return false
+    if (r.status !== 0 || !/^\d{4}\.\d{2}(\d{2})?/.test(v)) {
+      console.log(`[vercel] yt-dlp probe rejected ${bin}: status=${r.status} out=${JSON.stringify(v.slice(0, 40))} err=${JSON.stringify(String(r.stderr || '').slice(0, 120))}`)
+      return false
+    }
     return true
-  } catch (_) {
+  } catch (err) {
+    console.log(`[vercel] yt-dlp probe threw for ${bin}: ${String(err && err.message).slice(0, 160)}`)
     return false
   }
 }
