@@ -116,20 +116,19 @@ export function PlayerProvider({ children }) {
     if (a) a.volume = volume
   }, [volume])
 
-  const skipOrStop = useCallback(
-    (msg) => {
-      const { queue: q, index: i } = stateRef.current
-      const ni = i + 1
-      if (q.length > 1 && ni < q.length) {
-        setIndex(ni)
-        loadSong(q[ni])
-      } else {
-        setError(msg || 'Playback error — this track may be unavailable')
-        setPlaying(false)
-      }
-    },
-    [loadSong],
-  )
+  const loadSongRef = useRef(null)
+
+  const skipOrStop = useCallback((msg) => {
+    const { queue: q, index: i } = stateRef.current
+    const ni = i + 1
+    if (q.length > 1 && ni < q.length) {
+      setIndex(ni)
+      if (loadSongRef.current) loadSongRef.current(q[ni])
+    } else {
+      setError(msg || 'Playback error — this track may be unavailable')
+      setPlaying(false)
+    }
+  }, [])
 
   const loadSong = useCallback(
     async (song) => {
@@ -152,6 +151,10 @@ export function PlayerProvider({ children }) {
     },
     [getAudio, playSource, destroyHls, skipOrStop],
   )
+
+  useEffect(() => {
+    loadSongRef.current = loadSong
+  }, [loadSong])
 
   const play = useCallback(
     (song) => {
