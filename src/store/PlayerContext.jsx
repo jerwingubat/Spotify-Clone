@@ -85,6 +85,18 @@ export function PlayerProvider({ children }) {
                 const http = data.networkDetails && data.networkDetails.status
                 const detail = String(data.details || '').replace(/_/g, ' ')
                 msg = `Stream error (HLS) — ${detail.toLowerCase()}${http ? ` (HTTP ${http})` : ''}`
+                if (data.networkDetails && typeof data.networkDetails.clone === 'function') {
+                  data.networkDetails
+                    .clone()
+                    .text()
+                    .then((t) => {
+                      try {
+                        const b = JSON.parse(t)
+                        if (b && b.detail) setError(`Stream error (HLS) — ${String(b.detail).slice(0, 180)}`)
+                      } catch (_) {}
+                    })
+                    .catch(() => {})
+                }
               }
               hlsPlayer.destroy()
               hlsRef.current = null

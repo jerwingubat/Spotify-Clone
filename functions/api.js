@@ -8,6 +8,29 @@ export const DEFAULT_SOURCES = ['soundcloud', 'bandcamp', 'youtube']
 
 const DIRECT_MEDIA = /\.(m3u8|m4s|mp4|m4a|aac|ts|opus|webm|mp3|flac|oga)(\?|$)/i
 
+const BROWSER_UA =
+  'Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/124.0.0.0 Safari/537.36'
+
+function upstreamHeaders(target, extra = {}) {
+  const headers = {
+    'User-Agent': BROWSER_UA,
+    Accept: '*/*',
+    'Accept-Language': 'en-US,en;q=0.9',
+    ...extra,
+  }
+  try {
+    const host = new URL(target).hostname
+    if (/soundcloud/i.test(host)) {
+      headers.Referer = 'https://soundcloud.com/'
+      headers.Origin = 'https://soundcloud.com'
+    } else if (/youtube|googlevideo|ytimg/i.test(host)) {
+      headers.Referer = 'https://www.youtube.com/'
+      headers.Origin = 'https://www.youtube.com'
+    }
+  } catch (_) {}
+  return headers
+}
+
 function isValidSource(s) {
   return Object.prototype.hasOwnProperty.call(SOURCES, s)
 }
@@ -143,11 +166,9 @@ export function createApi({ searchPlaylist, extractAudioUrl }) {
   async function proxyBinary(target, req, res) {
     const INITIAL_RANGE = 'bytes=0-1048575'
     const browserRange = req.headers['range']
-    const headers = {
-      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-      Accept: '*/*',
+    const headers = upstreamHeaders(target, {
       Range: browserRange || INITIAL_RANGE,
-    }
+    })
 
     let up
     try {
@@ -200,15 +221,18 @@ export function createApi({ searchPlaylist, extractAudioUrl }) {
       }
 
       if (hls) {
-        const up = await fetch(target, {
+        let up = await fetch(target, {
           redirect: 'follow',
-          headers: {
-            'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
-            Accept: '*/*',
-          },
+          headers: upstreamHeaders(target),
         })
         if (!up.ok) {
-          return json(res, 502, { error: 'playlist fetch failed', detail: `${up.status} ${target}` })
+          up = await fetch(target, {
+            redirect: 'follow',
+            headers: { 'User-Agent': BROWSER_UA, Accept: '*/*' },
+          })
+        }
+        if (!up.ok) {
+          return json(res, 502, { error: 'playlist fetch failed', detail: `${up.status} ${target.slice(0, 120)}` })
         }
         const text = await up.text()
         setCors(res, { 'X-Stream-Type': 'hls' })
