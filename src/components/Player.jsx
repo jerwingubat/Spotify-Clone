@@ -7,6 +7,8 @@ import {
   RepeatIcon,
   VolumeIcon,
   PlusIcon,
+  ExpandIcon,
+  ContractIcon,
 } from './Icons.jsx'
 import { usePlayer } from '../store/PlayerContext.jsx'
 import { useAuth } from '../store/AuthContext.jsx'
@@ -23,7 +25,7 @@ function format(sec) {
 export default function Player() {
   const {
     track, playing, progress, duration, volume,
-    loading, error, togglePlay, seek, next, prev, setVol, clearError,
+    loading, error, togglePlay, seek, next, prev, setVol, clearError, fsOpen, toggleFs,
   } = usePlayer()
   const { user, signIn } = useAuth()
   const { likeSong, unlikeSong, isLiked } = usePlaylists()
@@ -148,6 +150,14 @@ export default function Player() {
 
       {/* Right: volume (desktop) */}
       <div className="hidden items-center justify-end gap-4 lg:flex">
+        <button
+          className="flex h-8 w-8 flex-none items-center justify-center rounded-full text-[#b3b3b3] transition hover:text-white"
+          onClick={toggleFs}
+          title={fsOpen ? 'Exit fullscreen' : 'Fullscreen'}
+          aria-label={fsOpen ? 'Exit fullscreen' : 'Fullscreen'}
+        >
+          {fsOpen ? <ContractIcon /> : <ExpandIcon />}
+        </button>
         <VolumeIcon />
         <label className="bar w-[110px] flex-none">
           <input type="range" min="0" max="1" step="0.01" value={volume} onChange={(e) => setVol(+e.target.value)} />
@@ -157,6 +167,14 @@ export default function Player() {
 
       {/* Mobile: play controls */}
       <div className="flex items-center justify-end gap-3 md:hidden">
+        <button
+          className="flex h-8 w-8 items-center justify-center rounded-full text-[#b3b3b3] transition hover:text-white"
+          onClick={toggleFs}
+          title={fsOpen ? 'Exit fullscreen' : 'Fullscreen'}
+          aria-label={fsOpen ? 'Exit fullscreen' : 'Fullscreen'}
+        >
+          {fsOpen ? <ContractIcon /> : <ExpandIcon />}
+        </button>
         <button className={btnCls(false)} onClick={() => !loading && prev()} title="Previous">
           <SkipBackIcon />
         </button>

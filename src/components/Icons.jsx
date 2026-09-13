@@ -26,8 +26,8 @@ export const LibraryIcon = () => (
   </svg>
 )
 
-export const PlusIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+export const PlusIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor">
     <path d="M8 1.5a.75.75 0 0 1 .75.75v5h5a.75.75 0 0 1 0 1.5h-5v5a.75.75 0 0 1-1.5 0v-5h-5a.75.75 0 0 1 0-1.5h5v-5A.75.75 0 0 1 8 1.5z" />
   </svg>
 )
@@ -44,14 +44,14 @@ export const ShuffleIcon = ({ size = 16 }) => (
   </svg>
 )
 
-export const SkipBackIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+export const SkipBackIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor">
     <path d="M3.3 1a.7.7 0 0 1 .7.7v5.15l9.95-5.744a.7.7 0 0 1 1.05.606v12.575a.7.7 0 0 1-1.05.607L4 9.149V14.3a.7.7 0 0 1-.7.7H1.7a.7.7 0 0 1-.7-.7V1.7a.7.7 0 0 1 .7-.7h1.6z" />
   </svg>
 )
 
-export const SkipForwardIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 16 16" fill="currentColor">
+export const SkipForwardIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" fill="currentColor">
     <path d="M12.7 1a.7.7 0 0 0-.7.7v5.15L2.05 1.107A.7.7 0 0 0 1 1.712v12.575a.7.7 0 0 0 1.05.607L12 9.149V14.3a.7.7 0 0 0 .7.7h1.6a.7.7 0 0 0 .7-.7V1.7a.7.7 0 0 0-.7-.7h-1.6z" />
   </svg>
 )
@@ -62,8 +62,8 @@ export const PlayFilledIcon = ({ size = 16 }) => (
   </svg>
 )
 
-export const RepeatIcon = () => (
-  <svg width="16" height="16" viewBox="0 0 24 24" fill="currentColor">
+export const RepeatIcon = ({ size = 16 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
     <path d="M7 7h10v3l4-4-4-4v3H5v6h2V7zm10 10H7v-3l-4 4 4 4v-3h12v-6h-2v4z" />
   </svg>
 )
@@ -103,5 +103,23 @@ export const CrossIcon = ({ size = 16 }) => (
 export const PlaylistIcon = ({ size = 24 }) => (
   <svg width={size} height={size} viewBox="0 0 24 24" fill="currentColor">
     <path d="M3 6a1 1 0 0 1 1-1h13a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h13a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h9a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1zm0 4a1 1 0 0 1 1-1h9a1 1 0 1 1 0 2H4a1 1 0 0 1-1-1zm10.5-5.66V7.51A1.01 1.01 0 0 1 14.49 6.5h.02L19 6.5c.55 0 1 .45.99 1.01L20 10a1 1 0 0 1-1 1h-4a1 1 0 0 1-1-1v1.34zm4.5-2.34l-2 .02V15.5c0 .97-.78 1.75-1.75 1.75H12v3l-2-2h3.25A3.75 3.75 0 0 0 17 14.75V12.34z" />
+  </svg>
+)
+
+export const ExpandIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8 3H5a2 2 0 0 0-2 2v3" />
+    <path d="M21 8V5a2 2 0 0 0-2-2h-3" />
+    <path d="M3 16v3a2 2 0 0 0 2 2h3" />
+    <path d="M16 21h3a2 2 0 0 0 2-2v-3" />
+  </svg>
+)
+
+export const ContractIcon = ({ size = 18 }) => (
+  <svg width={size} height={size} viewBox="0 0 24 24" fill="none" stroke="currentColor" strokeWidth="2" strokeLinecap="round" strokeLinejoin="round">
+    <path d="M8 3v3a2 2 0 0 1-2 2H3" />
+    <path d="M21 8h-3a2 2 0 0 1-2-2V3" />
+    <path d="M3 16h3a2 2 0 0 1 2 2v3" />
+    <path d="M16 21v-3a2 2 0 0 1 2-2h3" />
   </svg>
 )

@@ -12,6 +12,8 @@ const FALLBACK_PLAYER = {
   volume: 0.82,
   loading: false,
   error: null,
+  fsOpen: false,
+  toggleFs: noop,
   play: noop,
   playQueue: noop,
   togglePlay: noop,
@@ -32,6 +34,7 @@ export function PlayerProvider({ children }) {
   const [volume, setVolume] = useState(0.82)
   const [loading, setLoading] = useState(false)
   const [error, setError] = useState(null)
+  const [fsOpen, setFsOpen] = useState(false)
   const [queue, setQueue] = useState([])
   const [index, setIndex] = useState(-1)
 
@@ -185,6 +188,53 @@ export function PlayerProvider({ children }) {
     if (audioRef.current) audioRef.current.volume = v
   }, [])
 
+  const toggleFs = useCallback(() => setFsOpen((v) => !v), [])
+
+  // Media Session API — lock-screen / notification controls + background playback
+  useEffect(() => {
+    if (!('mediaSession' in navigator)) return
+
+    navigator.mediaSession.metadata = new MediaMetadata({
+      title: track.title || 'Spotibai',
+      artist: track.artist || '',
+      album: track.album || '',
+      artwork: track.img
+        ? [
+            { src: track.img, sizes: '512x512' },
+            { src: track.img, sizes: '256x256' },
+          ]
+        : [],
+    })
+
+    const handle = (action, fn) => {
+      try {
+        navigator.mediaSession.setActionHandler(action, fn)
+      } catch (_) {}
+    }
+    handle('play', () => {
+      const a = audioRef.current
+      if (a) a.play().catch(() => setError('Playback error — this track may be unavailable'))
+    })
+    handle('pause', () => audioRef.current && audioRef.current.pause())
+    handle('previoustrack', () => prev())
+    handle('nexttrack', () => next())
+    handle('seekto', (d) => {
+      const a = audioRef.current
+      if (a && Number.isFinite(d.seekTime)) a.currentTime = d.seekTime
+    })
+
+    navigator.mediaSession.playbackState = playing ? 'playing' : 'paused'
+    if (duration > 0) {
+      try {
+        navigator.mediaSession.setPositionState({
+          duration,
+          playbackRate: 1,
+          position: Math.min(progress, duration),
+        })
+      } catch (_) {}
+    }
+  }, [track, playing, duration, progress, prev, next])
+
   useEffect(() => {
     const a = getAudio()
 
@@ -234,6 +284,8 @@ export function PlayerProvider({ children }) {
         volume,
         loading,
         error,
+        fsOpen,
+        toggleFs,
         play,
         playQueue,
         togglePlay,

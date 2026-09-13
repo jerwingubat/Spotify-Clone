@@ -6,6 +6,7 @@ import HomePage from './components/HomePage.jsx'
 import SearchPage from './components/SearchPage.jsx'
 import PlaylistPage from './components/PlaylistPage.jsx'
 import Player from './components/Player.jsx'
+import FullscreenNowPlaying from './components/FullscreenNowPlaying.jsx'
 import { playlists } from './data.js'
 import { AuthProvider, useAuth } from './store/AuthContext.jsx'
 import { PlaylistsProvider, usePlaylists } from './store/PlaylistsContext.jsx'
@@ -33,8 +34,9 @@ function AppInner() {
   }
 
   return (
-    <div className="app">
-      <Sidebar
+    <>
+      <div className="app">
+        <Sidebar
         view={view}
         setView={setView}
         library={library}
@@ -71,7 +73,10 @@ function AppInner() {
       </main>
 
       <Player />
-    </div>
+      </div>
+
+      <FullscreenNowPlaying />
+    </>
   )
 }
 
