@@ -152,7 +152,7 @@ export function AddSongsModal({ playlistId, onClose }) {
     setError(null)
     const t = setTimeout(async () => {
       try {
-        const res = await searchAll(q.trim(), ['soundcloud', 'youtube'], 6)
+        const res = await searchAll(q.trim(), ['youtube', 'soundcloud', 'bandcamp'], 6)
         setResults(res.results)
         if (res.errors) setError(Object.keys(res.errors).map((s) => SOURCE_LABELS[s]).join(' and ') + ' temporarily unavailable')
       } catch (err) {

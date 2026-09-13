@@ -29,7 +29,7 @@ const SOURCE_CHIPS = [
 ]
 
 function buildSources(chip) {
-  if (chip === 'all') return ['soundcloud', 'youtube']
+  if (chip === 'all') return ['youtube', 'soundcloud', 'bandcamp']
   return [chip]
 }
 

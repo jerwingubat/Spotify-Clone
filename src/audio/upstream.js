@@ -1,6 +1,6 @@
 const cache = new Map()
 
-const defaultSources = ['soundcloud', 'youtube']
+const defaultSources = ['youtube', 'soundcloud', 'bandcamp']
 
 export class BackendUnavailableError extends Error {
   constructor(api) {

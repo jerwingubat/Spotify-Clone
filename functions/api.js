@@ -4,7 +4,7 @@ export const SOURCES = {
   youtube: { prefix: 'ytsearch', home: 'youtube.com' },
 }
 
-export const DEFAULT_SOURCES = ['soundcloud', 'bandcamp', 'youtube']
+export const DEFAULT_SOURCES = ['youtube', 'soundcloud', 'bandcamp']
 
 const DIRECT_MEDIA = /\.(m3u8|m4s|mp4|m4a|aac|ts|opus|webm|mp3|flac|oga)(\?|$)/i
 
