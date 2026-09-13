@@ -78,20 +78,25 @@ async function ensureYtDlp() {
 }
 
 function makeBackend(ytDlpBin) {
+  const base = ['--no-warnings', '--no-cache-dir', '--no-update']
+  const runOpts = {
+    maxBuffer: 1024 * 1024 * 32,
+    timeout: 120_000,
+    env: { ...process.env, HOME: '/tmp', XDG_CONFIG_HOME: '/tmp/xdg-config', XDG_CACHE_HOME: '/tmp/xdg-cache' },
+  }
   return {
     async searchPlaylist(input) {
       const { stdout } = await execFileAsync(
         ytDlpBin,
-        ['-J', '--flat-playlist', '--no-warnings', input],
-        { maxBuffer: 1024 * 1024 * 32, timeout: 120_000 },
+        ['-J', '--flat-playlist', ...base, input],
+        runOpts,
       )
       return JSON.parse(stdout)
     },
 
     async extractAudioUrl(url) {
-      const args = ['--get-url', '-f', 'bestaudio/best', '--no-playlist', '--no-warnings', '--extractor-args', 'youtube:player_client=android', url]
-      const run = () =>
-        execFileAsync(ytDlpBin, args, { maxBuffer: 1024 * 1024 * 32, timeout: 120_000 })
+      const args = ['--get-url', '-f', 'bestaudio/best', '--no-playlist', ...base, '--extractor-args', 'youtube:player_client=android', url]
+      const run = () => execFileAsync(ytDlpBin, args, runOpts)
       let out
       try {
         out = await run()

@@ -3,9 +3,17 @@ import { spawnSync, execFile } from 'node:child_process'
 import { existsSync, mkdirSync, writeFileSync, chmodSync } from 'node:fs'
 import { join } from 'node:path'
 
+const RUN_ENV = { ...process.env, HOME: '/tmp', XDG_CONFIG_HOME: '/tmp/xdg-config', XDG_CACHE_HOME: '/tmp/xdg-cache' }
+
+const PROXY_OPTS = {
+  maxBuffer: 1024 * 1024 * 32,
+  timeout: 120_000,
+  env: RUN_ENV,
+}
+
 const execFileAsync = (cmd, args) =>
   new Promise((resolve, reject) => {
-    execFile(cmd, args, { maxBuffer: 1024 * 1024 * 32, timeout: 120_000 }, (err, stdout) =>
+    execFile(cmd, args, PROXY_OPTS, (err, stdout) =>
       err ? reject(err) : resolve(String(stdout || '')),
     )
   })
@@ -53,13 +61,14 @@ async function ensureYtDlp() {
 }
 
 function makeBackend(ytDlpBin) {
+  const base = ['--no-warnings', '--no-cache-dir', '--no-update']
   return {
     async searchPlaylist(input) {
-      const { stdout } = await execFileAsync(ytDlpBin, ['-J', '--flat-playlist', '--no-warnings', input])
+      const stdout = await execFileAsync(ytDlpBin, ['-J', '--flat-playlist', ...base, input])
       return JSON.parse(stdout)
     },
     async extractAudioUrl(url) {
-      const args = ['--get-url', '-f', 'bestaudio/best', '--no-playlist', '--no-warnings', '--extractor-args', 'youtube:player_client=android', url]
+      const args = ['--get-url', '-f', 'bestaudio/best', '--no-playlist', ...base, '--extractor-args', 'youtube:player_client=android', url]
       try {
         return (await execFileAsyncLine(ytDlpBin, args)).trim()
       } catch (err) {

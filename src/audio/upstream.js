@@ -43,7 +43,13 @@ export async function searchAll(q, sources = defaultSources, limit = 5) {
       sourceErrors = body.errors || null
     } catch (_) {}
     const err = new Error(detail || `Search server error (${res.status})`)
-    if (sourceErrors) err.sourceErrors = sourceErrors
+    if (sourceErrors) {
+      err.sourceErrors = sourceErrors
+      const joined = Object.entries(sourceErrors)
+        .map(([s, m]) => `${s}: ${String(m).replace(/\s+/g, ' ').slice(0, 120)}`)
+        .join(' | ')
+      if (joined) err.message = `${err.message} — ${joined}`
+    }
     throw err
   }
   const data = await readJson(res, 'Search (/api/search)')
