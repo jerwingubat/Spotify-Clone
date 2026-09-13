@@ -40,14 +40,14 @@ function AppInner() {
         setSelectedPlaylist={openPlaylist}
       />
 
-      <main className="main">
+      <main className="flex min-h-0 min-w-0 flex-col">
         <TopBar
           onBack={goBack}
           canGoBack={stack.length > 0}
           onHome={() => setView('home')}
         />
 
-        <div className="main__content">
+        <div className="main__content flex-1 overflow-y-auto rounded-lg bg-[linear-gradient(180deg,#1f1f1f_0%,#121212_300px)] md:min-h-0">
           {view === 'home' && <HomePage onOpenPlaylist={openPlaylist} />}
           {view === 'search' && <SearchPage onOpenPlaylist={openPlaylist} />}
           {view === 'playlist' && (
