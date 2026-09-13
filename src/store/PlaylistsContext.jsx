@@ -16,6 +16,19 @@ import { useAuth } from './AuthContext.jsx'
 
 const noop = () => {}
 
+const clean = (v) => {
+  if (Array.isArray(v)) return v.map(clean)
+  if (v && typeof v === 'object') {
+    const o = {}
+    for (const k of Object.keys(v)) {
+      const val = clean(v[k])
+      if (val !== undefined) o[k] = val
+    }
+    return o
+  }
+  return v
+}
+
 const FALLBACK_PLAYLISTS = {
   playlists: [],
   loading: false,
@@ -64,7 +77,7 @@ export function PlaylistsProvider({ children }) {
       name,
       color,
       desc,
-      songs,
+      songs: songs.map(clean),
       createdAt: serverTimestamp(),
       owner: user.uid,
     })
@@ -83,7 +96,7 @@ export function PlaylistsProvider({ children }) {
   }
 
   const addSong = async (id, song) => {
-    await updateDoc(doc(col(), id), { songs: arrayUnion(song) })
+    await updateDoc(doc(col(), id), { songs: arrayUnion(clean(song)) })
     await reload()
   }
 
