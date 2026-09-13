@@ -1,5 +1,6 @@
 import React, { useState } from 'react'
 import Sidebar from './components/Sidebar.jsx'
+import MobileMenu from './components/MobileMenu.jsx'
 import TopBar from './components/TopBar.jsx'
 import HomePage from './components/HomePage.jsx'
 import SearchPage from './components/SearchPage.jsx'
@@ -16,6 +17,7 @@ function AppInner() {
   const [view, setView] = useState('home')
   const [selected, setSelected] = useState(null)
   const [stack, setStack] = useState([])
+  const [menuOpen, setMenuOpen] = useState(false)
 
   const library = user ? userPlaylists : playlists
 
@@ -40,11 +42,22 @@ function AppInner() {
         setSelectedPlaylist={openPlaylist}
       />
 
+      <MobileMenu
+        open={menuOpen}
+        onClose={() => setMenuOpen(false)}
+        view={view}
+        setView={setView}
+        library={library}
+        isUserLibrary={!!user}
+        setSelectedPlaylist={openPlaylist}
+      />
+
       <main className="flex min-h-0 min-w-0 flex-col">
         <TopBar
           onBack={goBack}
           canGoBack={stack.length > 0}
           onHome={() => setView('home')}
+          onOpenMenu={() => setMenuOpen(true)}
         />
 
         <div className="main__content flex-1 overflow-y-auto rounded-lg bg-[linear-gradient(180deg,#1f1f1f_0%,#121212_300px)] md:min-h-0">

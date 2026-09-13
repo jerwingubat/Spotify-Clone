@@ -13,6 +13,12 @@ export const SearchIcon = () => (
   </svg>
 )
 
+export const MenuIcon = () => (
+  <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor">
+    <path d="M3 6h18v2H3V6zm0 5h18v2H3v-2zm0 5h18v2H3v-2z" />
+  </svg>
+)
+
 export const LibraryIcon = () => (
   <svg width="24" height="24" viewBox="0 0 24 24" fill="currentColor">
     <path d="M6.5 3c1.95 0 4.05.4 5.5 1.5 1.45-1.1 3.55-1.5 5.5-1.5C15.45 3.9 13.1 4.5 12 4.5 10.9 4.5 8.55 3.9 6.5 3z" />

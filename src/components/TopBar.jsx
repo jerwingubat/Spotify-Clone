@@ -1,8 +1,8 @@
 import React, { useEffect, useState } from 'react'
 import { useAuth } from '../store/AuthContext.jsx'
-import { ArrowIcon } from './Icons.jsx'
+import { ArrowIcon, MenuIcon } from './Icons.jsx'
 
-export default function TopBar({ onBack, canGoBack, onHome }) {
+export default function TopBar({ onBack, canGoBack, onHome, onOpenMenu }) {
   const { user, signIn, signOut } = useAuth()
   const [menuOpen, setMenuOpen] = useState(false)
   const [installEvt, setInstallEvt] = useState(null)
@@ -36,6 +36,14 @@ export default function TopBar({ onBack, canGoBack, onHome }) {
   return (
     <header className="flex shrink-0 items-center justify-between px-3 py-3 md:px-6">
       <div className="flex items-center gap-2">
+        <button
+          className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white md:hidden"
+          onClick={onOpenMenu}
+          aria-label="Open menu"
+          aria-expanded={menuOpen}
+        >
+          <MenuIcon />
+        </button>
         <button
           className="flex h-8 w-8 items-center justify-center rounded-full bg-black/40 text-white transition disabled:text-[#7a7a7a]"
           onClick={onBack}
