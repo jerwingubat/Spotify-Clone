@@ -69,11 +69,19 @@ function makeBackend(ytDlpBin) {
     },
     async extractAudioUrl(url) {
       const args = ['--get-url', '-f', 'bestaudio/best', '--no-playlist', ...base, '--extractor-args', 'youtube:player_client=android', url]
+      const fallbackArgs = ['--get-url', '-f', 'bestaudio/best', '--no-playlist', ...base, url]
+      let out
       try {
-        return (await execFileAsyncLine(ytDlpBin, args)).trim()
+        out = await execFileAsync(ytDlpBin, args)
       } catch (err) {
-        return (await execFileAsyncLine(ytDlpBin, args)).trim()
+        out = await execFileAsync(ytDlpBin, fallbackArgs)
       }
+      let line = String(out.stdout || '').trim().split('\n')[0] || ''
+      if (!line) {
+        out = await execFileAsync(ytDlpBin, fallbackArgs)
+        line = String(out.stdout || '').trim().split('\n')[0] || ''
+      }
+      return line
     },
   }
 }

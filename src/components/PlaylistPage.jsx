@@ -11,33 +11,35 @@ const LIKE_COLORS = ['#503750', '#e8115b', '#148a08', '#246bc4', '#8e66ac', '#ba
 export default function PlaylistPage({ playlist, onBack }) {
   const { playQueue } = usePlayer()
   const { user } = useAuth()
-  const { remove, create, removeSong } = usePlaylists()
+  const { playlists, remove, create, removeSong } = usePlaylists()
   const [editing, setEditing] = useState(false)
   const [adding, setAdding] = useState(false)
 
-  const isOwned = !!user && !!playlist.id && !!playlist.createdAt
-  const tracklist = Array.isArray(playlist.songs) ? playlist.songs : defaultSongs
+  const livePlaylist =
+    (playlist.id && playlists.find((p) => p.id === playlist.id)) || playlist
+  const isOwned = !!user && !!livePlaylist.id && !!livePlaylist.createdAt
+  const tracklist = Array.isArray(livePlaylist.songs) ? livePlaylist.songs : defaultSongs
 
   const saveToLibrary = async () => {
     if (!user) return
-    const color = LIKE_COLORS[playlist.id % LIKE_COLORS.length]
-    const songs = Array.isArray(playlist.songs)
-      ? playlist.songs.map((s) => ({ title: s.title, artist: s.artist, album: s.album }))
+    const color = LIKE_COLORS[livePlaylist.id % LIKE_COLORS.length]
+    const songs = Array.isArray(livePlaylist.songs)
+      ? livePlaylist.songs.map((s) => ({ title: s.title, artist: s.artist, album: s.album }))
       : defaultSongs.map((s) => ({ title: s.title, artist: s.artist, album: s.album }))
     await create({
-      name: playlist.name,
+      name: livePlaylist.name,
       color,
-      desc: playlist.desc || 'My playlist',
+      desc: livePlaylist.desc || 'My playlist',
       songs,
     })
-    alert(`Saved "${playlist.name}" to your library`)
+    alert(`Saved "${livePlaylist.name}" to your library`)
   }
 
   return (
     <div className="min-w-0 px-4 md:px-6">
       <div
         className="-mx-4 px-4 pb-5 pt-2 md:-mx-6 md:px-6"
-        style={{ background: `linear-gradient(180deg, ${playlist.color}AA, #121212 85%)` }}
+        style={{ background: `linear-gradient(180deg, ${livePlaylist.color}AA, #121212 85%)` }}
       >
         <button className="mb-4 flex items-center gap-1 text-white transition hover:-translate-x-0.5" onClick={onBack}>
           <svg width="20" height="20" viewBox="0 0 24 24" fill="currentColor" style={{ transform: 'rotate(180deg)' }}>
@@ -48,10 +50,10 @@ export default function PlaylistPage({ playlist, onBack }) {
         <div className="flex flex-col items-center gap-5 text-center sm:flex-row sm:text-left">
           <div
             className="relative flex h-40 w-40 shrink-0 items-center justify-center overflow-hidden rounded shadow-[0_16px_32px_rgba(0,0,0,0.5)] sm:h-48 sm:w-48"
-            style={{ background: playlist.color }}
+            style={{ background: livePlaylist.color }}
           >
-            {playlist.img && (
-              <img src={playlist.img} alt="" className="absolute inset-0 h-full w-full object-cover" />
+            {livePlaylist.img && (
+              <img src={livePlaylist.img} alt="" className="absolute inset-0 h-full w-full object-cover" />
             )}
             <svg width="40" height="40" viewBox="0 0 24 24" fill="#000" className="drop-shadow-lg">
               <path d="M7.05 3.606l13.49 7.788a.7.7 0 0 1 0 1.212L7.05 20.394A.7.7 0 0 1 6 19.788V4.212a.7.7 0 0 1 1.05-.606z" />
@@ -59,8 +61,8 @@ export default function PlaylistPage({ playlist, onBack }) {
           </div>
           <div className="min-w-0">
             <p className="mb-2 text-[13px] font-semibold">{isOwned ? 'Your Playlist' : 'Public Playlist'}</p>
-            <h1 className="mb-3 text-5xl font-black leading-none tracking-tighter md:text-[72px]">{playlist.name}</h1>
-            {playlist.desc && <p className="mb-2 text-[15px] text-white/85">{playlist.desc}</p>}
+            <h1 className="mb-3 text-5xl font-black leading-none tracking-tighter md:text-[72px]">{livePlaylist.name}</h1>
+            {livePlaylist.desc && <p className="mb-2 text-[15px] text-white/85">{livePlaylist.desc}</p>}
             <p className="text-[13px] text-[#b3b3b3]">
               <strong className="text-white">{user?.displayName || 'Spotibai'}</strong> • {tracklist.length} songs
             </p>
@@ -88,7 +90,7 @@ export default function PlaylistPage({ playlist, onBack }) {
           </button>
         )}
 
-        {user && isOwned && playlist.name !== 'Liked Songs' && (
+        {user && isOwned && livePlaylist.name !== 'Liked Songs' && (
           <>
             <button
               className="text-[13px] font-bold text-[#b3b3b3] transition hover:scale-[1.04] hover:text-white"
@@ -105,8 +107,8 @@ export default function PlaylistPage({ playlist, onBack }) {
             <button
               className="text-[13px] font-bold text-[#b3b3b3] transition hover:scale-[1.04] hover:text-[#ff4d4d]"
               onClick={() => {
-                if (confirm(`Delete "${playlist.name}"?`)) {
-                  remove(playlist.id)
+                if (confirm(`Delete "${livePlaylist.name}"?`)) {
+                  remove(livePlaylist.id)
                   onBack()
                 }
               }}
@@ -156,7 +158,7 @@ export default function PlaylistPage({ playlist, onBack }) {
                   className="flex h-6 w-6 items-center justify-center rounded-full text-[#b3b3b3] transition hover:bg-white/15 hover:text-white sm:opacity-0 sm:group-hover:opacity-100"
                   onClick={(e) => {
                     e.stopPropagation()
-                    if (confirm(`Remove "${t.title}"?`)) removeSong(playlist.id, t.title)
+                    if (confirm(`Remove "${t.title}"?`)) removeSong(livePlaylist.id, t.title)
                   }}
                   title="Remove from playlist"
                 >
@@ -170,8 +172,8 @@ export default function PlaylistPage({ playlist, onBack }) {
         ))}
       </div>
 
-      {editing && <EditPlaylistModal playlist={playlist} onClose={() => setEditing(false)} />}
-      {adding && <AddSongsModal playlistId={playlist.id} onClose={() => setAdding(false)} />}
+      {editing && <EditPlaylistModal playlist={livePlaylist} onClose={() => setEditing(false)} />}
+      {adding && <AddSongsModal playlistId={livePlaylist.id} onClose={() => setAdding(false)} />}
     </div>
   )
 }

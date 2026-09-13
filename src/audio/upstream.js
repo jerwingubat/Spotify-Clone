@@ -71,13 +71,18 @@ export async function probeStream(url) {
     throw new BackendUnavailableError('Streaming (/api/stream)')
   }
   if (!res.ok) {
-    let detail = ''
+    let bodyText = ''
     try {
-      const body = await res.json()
-      if (body && body.error) detail = body.detail || body.error
-    } catch (_) {}
-    if (detail) throw new Error(`Stream failed — ${String(detail).slice(0, 180)}`)
-    throw new Error(`Audio stream error (HTTP ${res.status})`)
+      const text = await res.text()
+      bodyText = text || ''
+      const body = JSON.parse(text)
+      if (body && body.detail) throw new Error(`Stream failed — ${String(body.detail).slice(0, 180)}`)
+      if (body && body.error) throw new Error(`Stream failed — ${String(body.error).slice(0, 180)}`)
+    } catch (err) {
+      if (err instanceof Error && err.message.startsWith('Stream failed')) throw err
+    }
+    const snippet = bodyText.replace(/\s+/g, ' ').slice(0, 140)
+    throw new Error(`Audio stream error (HTTP ${res.status})${snippet ? ` — ${snippet}` : ''}`)
   }
   return (res.headers.get('x-stream-type') || '').toLowerCase()
 }
