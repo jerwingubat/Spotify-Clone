@@ -70,7 +70,8 @@ function makeBackend(ytDlpBin) {
 }
 
 let backendPromise = null
-function getBackend() {
+const apiCache = new Map()
+function getApi() {
   if (!backendPromise) {
     backendPromise = ensureYtDlp()
       .then(makeBackend)
@@ -79,12 +80,15 @@ function getBackend() {
         throw err
       })
   }
-  return backendPromise
+  return backendPromise.then((backend) => {
+    if (!apiCache.has(backend)) apiCache.set(backend, createApi(backend))
+    return apiCache.get(backend)
+  })
 }
 
 export default async function handler(req, res) {
   try {
-    const api = await getBackend()
+    const api = await getApi()
     await api.handle(req, res)
   } catch (err) {
     if (!res.headersSent) {
