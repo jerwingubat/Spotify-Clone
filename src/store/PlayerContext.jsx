@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
 import Hls from 'hls.js'
-import { resolvePlayUrl, probeStream } from '../audio/upstream.js'
+import { resolvePlayUrl, resolveByName, probeStream } from '../audio/upstream.js'
 
 const noop = () => {}
 
@@ -137,9 +137,21 @@ export function PlayerProvider({ children }) {
       const a = audioRef.current || getAudio()
       destroyHls()
       try {
-        const { url } = await resolvePlayUrl(song)
+        let { url } = await resolvePlayUrl(song)
         if (!url) throw new Error(`No audio found for "${song.title}"`)
-        const type = await probeStream(url)
+        let type
+        try {
+          type = await probeStream(url)
+        } catch (probeErr) {
+          if (!song.url) throw probeErr
+          const alt = await resolveByName(`${song.title} ${song.artist}`.trim(), url)
+          if (alt && alt.url && alt.url !== url) {
+            url = alt.url
+            type = await probeStream(url)
+          } else {
+            throw probeErr
+          }
+        }
         const hls = type === 'hls'
         setTrack({ title: song.title, artist: song.artist, album: song.album, source: song.source, img: song.thumbnail || song.img })
         await playSource(a, url, hls)

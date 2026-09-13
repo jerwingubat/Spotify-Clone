@@ -87,20 +87,21 @@ export async function probeStream(url) {
   return (res.headers.get('x-stream-type') || '').toLowerCase()
 }
 
-export async function resolvePlayUrl(song) {
-  if (song.url) {
-    return { url: streamUrlFor(song.url), hls: song.source === 'soundcloud' }
-  }
-
-  const key = `${song.title}|${song.artist}`
-  if (cache.has(key)) return cache.get(key)
-
-  const { results } = await searchAll(`${song.title} ${song.artist}`.trim(), defaultSources, 1)
+export async function resolveByName(q, skipUrl) {
+  if (!skipUrl && cache.has(q)) return cache.get(q)
+  const { results } = await searchAll(q, defaultSources, 1)
   const first = results[0]
   const resolved = {
     url: first && first.url ? streamUrlFor(first.url) : null,
     hls: (first && first.source) === 'soundcloud',
   }
-  cache.set(key, resolved)
+  if (!skipUrl) cache.set(q, resolved)
   return resolved
+}
+
+export async function resolvePlayUrl(song) {
+  if (song.url) {
+    return { url: streamUrlFor(song.url), hls: song.source === 'soundcloud' }
+  }
+  return resolveByName(`${song.title} ${song.artist}`.trim())
 }

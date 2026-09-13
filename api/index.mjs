@@ -67,9 +67,9 @@ function makeBackend(ytDlpBin) {
       const stdout = await execFileAsync(ytDlpBin, ['-J', '--flat-playlist', ...base, input])
       return JSON.parse(stdout)
     },
-    async extractAudioUrl(url) {
-      const args = ['--get-url', '-f', 'bestaudio/best', '--no-playlist', ...base, '--extractor-args', 'youtube:player_client=android', url]
-      const fallbackArgs = ['--get-url', '-f', 'bestaudio/best', '--no-playlist', ...base, url]
+async extractAudioUrl(url) {
+      const args = ['--get-url', '-f', 'bestaudio/best', '--no-playlist', ...base, '--extractor-args', 'youtube:player_client=android,default,ios,web', '--socket-timeout', '20', url]
+      const fallbackArgs = ['--get-url', '-f', 'bestaudio/best', '--no-playlist', ...base, '--socket-timeout', '20', url]
       let out
       try {
         out = await execFileAsync(ytDlpBin, args)
