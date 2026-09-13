@@ -1,6 +1,6 @@
 const cache = new Map()
 
-const defaultSources = ['soundcloud', 'bandcamp', 'youtube']
+const defaultSources = ['soundcloud', 'youtube']
 
 export async function searchAll(q, sources = defaultSources, limit = 5) {
   const params = new URLSearchParams({
@@ -29,15 +29,30 @@ export function streamUrlFor(url) {
   return `/api/stream?url=${encodeURIComponent(url)}`
 }
 
+export async function probeStream(url) {
+  let res
+  try {
+    res = await fetch(url, { method: 'HEAD' })
+  } catch (_) {
+    throw new Error('Audio server unreachable — run `npm run dev:full`')
+  }
+  return (res.headers.get('x-stream-type') || '').toLowerCase()
+}
+
 export async function resolvePlayUrl(song) {
-  if (song.url) return streamUrlFor(song.url)
+  if (song.url) {
+    return { url: streamUrlFor(song.url), hls: song.source === 'soundcloud' }
+  }
 
   const key = `${song.title}|${song.artist}`
   if (cache.has(key)) return cache.get(key)
 
-  const results = await searchAll(`${song.title} ${song.artist}`.trim(), defaultSources, 1)
-  const first = results.results[0]
-  const url = first && first.url ? streamUrlFor(first.url) : null
-  cache.set(key, url)
-  return url
+  const { results } = await searchAll(`${song.title} ${song.artist}`.trim(), defaultSources, 1)
+  const first = results[0]
+  const resolved = {
+    url: first && first.url ? streamUrlFor(first.url) : null,
+    hls: (first && first.source) === 'soundcloud',
+  }
+  cache.set(key, resolved)
+  return resolved
 }

@@ -18,7 +18,7 @@ const backend = {
   async extractAudioUrl(url) {
     const { stdout } = await execFileAsync(
       'yt-dlp',
-      ['--get-url', '-f', 'bestaudio/best', '--no-playlist', '--no-warnings', url],
+      ['--get-url', '-f', 'bestaudio/best', '--no-playlist', '--no-warnings', '--extractor-args', 'youtube:player_client=android', url],
       { maxBuffer: 1024 * 1024 * 32, timeout: 120_000 },
     )
     return stdout.trim().split('\n')[0] || ''

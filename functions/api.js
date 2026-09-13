@@ -6,8 +6,18 @@ export const SOURCES = {
 
 export const DEFAULT_SOURCES = ['soundcloud', 'bandcamp', 'youtube']
 
+const DIRECT_MEDIA = /\.(m3u8|m4s|mp4|m4a|aac|ts|opus|webm|mp3|flac|oga)(\?|$)/i
+
 function isValidSource(s) {
   return Object.prototype.hasOwnProperty.call(SOURCES, s)
+}
+
+function isHlsUrl(url) {
+  return /\.m3u8(\?|$)/i.test(url)
+}
+
+export function isDirectMediaUrl(url) {
+  return DIRECT_MEDIA.test(url)
 }
 
 function pick(item, source) {
@@ -35,6 +45,36 @@ function pick(item, source) {
   }
 }
 
+function rewritePlaylist(text, baseUrl) {
+  const toLocal = (raw) => {
+    try {
+      const abs = new URL(raw, baseUrl).href
+      return `/api/stream?url=${encodeURIComponent(abs)}`
+    } catch (_) {
+      return raw
+    }
+  }
+  return text
+    .split('\n')
+    .map((line) => {
+      const trimmed = line.trim()
+      if (!trimmed) return line
+      const uri = trimmed.match(/^(.*URI=")([^"]+)(".*)$/)
+      if (uri) return `${uri[1]}${toLocal(uri[2])}${uri[3]}`
+      if (trimmed.startsWith('#')) return line
+      return toLocal(trimmed)
+    })
+    .join('\n')
+}
+
+async function streamedBody(up) {
+  if (typeof ReadableStream !== 'undefined' && up.body && typeof up.body.getReader === 'function') {
+    const { Readable } = await import('node:stream')
+    return Readable.fromWeb(up.body)
+  }
+  return up.body
+}
+
 export function createApi({ searchPlaylist, extractAudioUrl }) {
   const streamCache = new Map()
 
@@ -51,10 +91,20 @@ export function createApi({ searchPlaylist, extractAudioUrl }) {
     return out
   }
 
-  function setCors(res) {
+  async function resolveTarget(urlParam) {
+    if (isDirectMediaUrl(urlParam)) return urlParam
+    if (streamCache.has(urlParam)) return streamCache.get(urlParam)
+    const target = await extractAudioUrl(urlParam)
+    if (!target) throw new Error('extraction returned an empty url')
+    streamCache.set(urlParam, target)
+    return target
+  }
+
+  function setCors(res, headers = {}) {
     res.setHeader('Access-Control-Allow-Origin', '*')
-    res.setHeader('Access-Control-Allow-Methods', 'GET, OPTIONS')
-    res.setHeader('Access-Control-Allow-Headers', '*')
+    res.setHeader('Access-Control-Allow-Methods', 'GET, HEAD, OPTIONS')
+    res.setHeader('Access-Control-Allow-Headers', 'Range, Content-Type')
+    for (const [k, v] of Object.entries(headers)) res.setHeader(k, v)
   }
 
   function json(res, code, body) {
@@ -90,27 +140,84 @@ export function createApi({ searchPlaylist, extractAudioUrl }) {
     return json(res, 200, { results, errors: Object.keys(errors).length ? errors : null })
   }
 
-  function handleStream(u, res) {
+  async function proxyBinary(target, req, res) {
+    const INITIAL_RANGE = 'bytes=0-1048575'
+    const browserRange = req.headers['range']
+    const headers = {
+      'User-Agent': 'Mozilla/5.0 (Windows NT 10.0; Win64; x64)',
+      Accept: '*/*',
+      Range: browserRange || INITIAL_RANGE,
+    }
+
+    let up
+    try {
+      up = await fetch(target, { headers, redirect: 'follow' })
+      if (!up.ok && !browserRange) {
+        up = await fetch(target, { headers: { ...headers, Range: INITIAL_RANGE }, redirect: 'follow' })
+      }
+    } catch (err) {
+      return json(res, 502, { error: 'upstream fetch failed', detail: String(err.message) })
+    }
+    if (!up.ok) {
+      return json(res, 502, { error: 'upstream error', detail: `${up.status} ${target}` })
+    }
+
+    const type = up.headers.get('content-type') || 'application/octet-stream'
+    const length = up.headers.get('content-length')
+    const contentRange = up.headers.get('content-range')
+    const acceptRanges = up.headers.get('accept-ranges') || 'bytes'
+
+    res.setHeader('Content-Type', type)
+    if (length) res.setHeader('Content-Length', length)
+    if (contentRange) res.setHeader('Content-Range', contentRange)
+    res.setHeader('Accept-Ranges', acceptRanges)
+    setCors(res)
+    res.writeHead(up.status)
+
+    const body = await streamedBody(up)
+    if (!body || typeof body.pipe !== 'function') {
+      res.end(Buffer.from(await up.arrayBuffer()))
+      return
+    }
+    body.on('error', () => res.end())
+    body.pipe(res)
+  }
+
+  async function handleStream(req, res) {
+    const u = new URL(req.url, 'http://localhost')
     const urlParam = u.searchParams.get('url')
     if (!urlParam) return json(res, 400, { error: 'missing url' })
     if (!/^https?:\/\//i.test(urlParam)) return json(res, 400, { error: 'invalid url' })
 
-    const send = async () => {
-      try {
-        let target = streamCache.get(urlParam)
-        if (!target) {
-          target = await extractAudioUrl(urlParam)
-          if (!target) throw new Error('extraction returned an empty url')
-          streamCache.set(urlParam, target)
-        }
-        setCors(res)
-        res.writeHead(302, { Location: target })
-        res.end()
-      } catch (err) {
-        json(res, 502, { error: 'audio extraction failed', detail: String(err.stderr || err.message || err) })
+    try {
+      const target = await resolveTarget(urlParam)
+      const hls = isHlsUrl(target)
+
+      if (req.method === 'HEAD') {
+        setCors(res, { 'X-Stream-Type': hls ? 'hls' : 'file', 'Content-Type': hls ? 'application/vnd.apple.mpegurl' : 'application/octet-stream' })
+        res.writeHead(200)
+        return res.end()
       }
+
+      if (hls) {
+        const up = await fetch(target, { redirect: 'follow' })
+        if (!up.ok) {
+          return json(res, 502, { error: 'playlist fetch failed', detail: `${up.status} ${target}` })
+        }
+        const text = await up.text()
+        setCors(res, { 'X-Stream-Type': 'hls' })
+        res.writeHead(200, {
+          'Content-Type': up.headers.get('content-type') || 'application/vnd.apple.mpegurl',
+          'Cache-Control': 'no-store',
+        })
+        res.end(rewritePlaylist(text, target))
+        return
+      }
+
+      return proxyBinary(target, req, res)
+    } catch (err) {
+      return json(res, 502, { error: 'audio extraction failed', detail: String(err.stderr || err.message || err) })
     }
-    return send()
   }
 
   async function handle(req, res) {
@@ -129,7 +236,7 @@ export function createApi({ searchPlaylist, extractAudioUrl }) {
         return await handleSearch(u, res)
       }
       if (path.endsWith('/stream')) {
-        return await handleStream(u, res)
+        return await handleStream(req, res)
       }
       return json(res, 404, { error: 'not found' })
     } catch (err) {

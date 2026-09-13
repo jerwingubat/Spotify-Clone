@@ -1,6 +1,6 @@
 import React, { createContext, useContext, useEffect, useRef, useState, useCallback } from 'react'
 import Hls from 'hls.js'
-import { resolvePlayUrl } from '../audio/upstream.js'
+import { resolvePlayUrl, probeStream } from '../audio/upstream.js'
 
 const noop = () => {}
 
@@ -64,25 +64,24 @@ export function PlayerProvider({ children }) {
   useEffect(() => () => destroyHls(), [destroyHls])
 
   const playSource = useCallback(
-    (a, src) =>
+    (a, src, hls) =>
       new Promise((resolve, reject) => {
-        const isHls = /\.m3u8($|\?)/i.test(src)
-        if (isHls && Hls.isSupported()) {
+        if (hls && Hls.isSupported()) {
           destroyHls()
-          const hls = new Hls()
-          hlsRef.current = hls
-          hls.loadSource(src)
-          hls.attachMedia(a)
-          hls.on(Hls.Events.MANIFEST_PARSED, () => {
+          const hlsPlayer = new Hls()
+          hlsRef.current = hlsPlayer
+          hlsPlayer.loadSource(src)
+          hlsPlayer.attachMedia(a)
+          hlsPlayer.on(Hls.Events.MANIFEST_PARSED, () => {
             a.play().then(resolve).catch(reject)
           })
-          hls.on(Hls.Events.ERROR, (_e, data) => {
+          hlsPlayer.on(Hls.Events.ERROR, (_e, data) => {
             if (data.fatal) reject(new Error('Stream error (HLS)'))
           })
-        } else {
-          a.src = src
-          a.play().then(resolve).catch(reject)
+          return
         }
+        a.src = src
+        a.play().then(resolve, reject)
       }),
     [destroyHls],
   )
@@ -98,10 +97,15 @@ export function PlayerProvider({ children }) {
       setError(null)
       const a = audioRef.current || getAudio()
       try {
-        const src = await resolvePlayUrl(song)
-        if (!src) throw new Error(`No audio found for "${song.title}"`)
+        const { url, hls: knownHls } = await resolvePlayUrl(song)
+        if (!url) throw new Error(`No audio found for "${song.title}"`)
+        let hls = knownHls
+        if (!hls) {
+          const type = await probeStream(url)
+          if (type === 'hls') hls = true
+        }
         setTrack({ title: song.title, artist: song.artist, album: song.album, source: song.source })
-        await playSource(a, src)
+        await playSource(a, url, hls)
       } catch (err) {
         setError(err.message || 'Could not load audio')
       } finally {
