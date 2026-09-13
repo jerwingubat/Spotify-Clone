@@ -163,24 +163,44 @@ export function createApi({ searchPlaylist, extractAudioUrl }) {
     return json(res, 200, { results, errors: Object.keys(errors).length ? errors : null })
   }
 
-  async function proxyBinary(target, req, res) {
-    const INITIAL_RANGE = 'bytes=0-1048575'
+  async function proxyBinary(target, req, res, headOnly = false) {
+    const INITIAL_RANGE = headOnly ? 'bytes=0-0' : 'bytes=0-1048575'
     const browserRange = req.headers['range']
-    const headers = upstreamHeaders(target, {
+    const baseHeaders = {
+      'User-Agent': BROWSER_UA,
+      Accept: '*/*',
+      'Accept-Language': 'en-US,en;q=0.9',
       Range: browserRange || INITIAL_RANGE,
-    })
+    }
+
+    const fetchTarget = (headers) => {
+      const f = fetch(target, { headers, redirect: 'follow' })
+      if (headers.Range) return f
+      return f.then((r) =>
+        r.ok ? r : fetch(target, { headers: { ...headers, Range: INITIAL_RANGE }, redirect: 'follow' }),
+      )
+    }
 
     let up
     try {
-      up = await fetch(target, { headers, redirect: 'follow' })
-      if (!up.ok && !browserRange) {
-        up = await fetch(target, { headers: { ...headers, Range: INITIAL_RANGE }, redirect: 'follow' })
+      try {
+        up = await fetchTarget(upstreamHeaders(target, baseHeaders))
+      } catch (_) {
+        up = await fetchTarget(baseHeaders)
       }
+      if (!up.ok) up = await fetchTarget(baseHeaders)
     } catch (err) {
       return json(res, 502, { error: 'upstream fetch failed', detail: String(err.message) })
     }
     if (!up.ok) {
-      return json(res, 502, { error: 'upstream error', detail: `${up.status} ${target}` })
+      const host = (() => {
+        try {
+          return new URL(target).hostname
+        } catch (_) {
+          return 'upstream'
+        }
+      })()
+      return json(res, 502, { error: 'upstream error', detail: `${up.status} ${host}` })
     }
 
     const type = up.headers.get('content-type') || 'application/octet-stream'
@@ -244,7 +264,7 @@ export function createApi({ searchPlaylist, extractAudioUrl }) {
         return
       }
 
-      return proxyBinary(target, req, res)
+      return proxyBinary(target, req, res, req.method === 'HEAD')
     } catch (err) {
       return json(res, 502, { error: 'audio extraction failed', detail: String(err.stderr || err.message || err) })
     }
